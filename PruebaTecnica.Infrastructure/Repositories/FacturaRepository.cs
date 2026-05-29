@@ -19,13 +19,11 @@ namespace PruebaTecnica.Infrastructure.Repositories
         {
             using var connection = _context.CreateConnection();
             await ((MySqlConnection)connection).OpenAsync();
-
-            // INICIAMOS LA TRANSACCIÓN
+            
             using var transaction = await ((MySqlConnection)connection).BeginTransactionAsync();
 
             try
-            {
-                // 1. Insertar el Encabezado de la Factura y obtener el ID generado
+            {                
                 var queryFactura = @"INSERT INTO Facturas (IdUsuarios, IdClientes, Fecha, Subtotal, ISV, Total) 
                                      VALUES (@IdUsuarios, @IdClientes, @Fecha, @Subtotal, @ISV, @Total);
                                      SELECT LAST_INSERT_ID();";
@@ -37,19 +35,16 @@ namespace PruebaTecnica.Infrastructure.Repositories
                 cmdFactura.Parameters.AddWithValue("@Subtotal", factura.Subtotal);
                 cmdFactura.Parameters.AddWithValue("@ISV", factura.ISV);
                 cmdFactura.Parameters.AddWithValue("@Total", factura.Total);
-
-                // Capturamos el ID de la factura recién creada
+                
                 factura.IdFacturas = Convert.ToInt32(await cmdFactura.ExecuteScalarAsync());
-
-                // 2. Insertar los Detalles y descontar el Inventario
+                
                 var queryDetalle = @"INSERT INTO FacturaDetalles (IdFacturas, IdProductos, Cantidad, PrecioUnitario, Subtotal) 
                                      VALUES (@IdFacturas, @IdProductos, @Cantidad, @PrecioUnitario, @Subtotal)";
 
                 var queryStock = @"UPDATE Productos SET Stock = Stock - @Cantidad WHERE IdProductos = @IdProductos";
 
                 foreach (var detalle in factura.Detalles)
-                {
-                    // Guardar el detalle
+                {                    
                     using var cmdDetalle = new MySqlCommand(queryDetalle, (MySqlConnection)connection, transaction);
                     cmdDetalle.Parameters.AddWithValue("@IdFacturas", factura.IdFacturas);
                     cmdDetalle.Parameters.AddWithValue("@IdProductos", detalle.IdProductos);
@@ -57,21 +52,18 @@ namespace PruebaTecnica.Infrastructure.Repositories
                     cmdDetalle.Parameters.AddWithValue("@PrecioUnitario", detalle.PrecioUnitario);
                     cmdDetalle.Parameters.AddWithValue("@Subtotal", detalle.Subtotal);
                     await cmdDetalle.ExecuteNonQueryAsync();
-
-                    // Descontar el stock automáticamente
+                    
                     using var cmdStock = new MySqlCommand(queryStock, (MySqlConnection)connection, transaction);
                     cmdStock.Parameters.AddWithValue("@Cantidad", detalle.Cantidad);
                     cmdStock.Parameters.AddWithValue("@IdProductos", detalle.IdProductos);
                     await cmdStock.ExecuteNonQueryAsync();
                 }
-
-                // SI TODO SALIÓ BIEN, CONFIRMAMOS LOS CAMBIOS EN LA BASE DE DATOS
+                
                 await transaction.CommitAsync();
                 return true;
             }
             catch (Exception)
-            {
-                // SI ALGO FALLÓ, REVERTIMOS TODO (No se guarda factura incompleta ni se descuenta stock)
+            {                
                 await transaction.RollbackAsync();
                 throw;
             }

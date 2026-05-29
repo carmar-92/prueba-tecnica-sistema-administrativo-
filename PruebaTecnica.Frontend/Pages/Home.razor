@@ -1,0 +1,184 @@
+﻿@page "/"
+@using PruebaTecnica.Frontend.Models
+@using PruebaTecnica.Frontend.Services
+@inject IReporteService ReporteService
+@inject IJSRuntime JsRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<div class="container-fluid mt-3 mb-5">
+    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard de Resultados</h2>
+
+    @if (cargando)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Cargando métricas del sistema...</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100 border-primary">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Top 5 Productos Más Vendidos</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @if (!topProductos.Any())
+                            {
+                                <li class="list-group-item text-muted">No hay datos de ventas aún.</li>
+                            }
+                            @foreach (var prod in topProductos)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">@prod.NombreProducto</div>
+                                        <small class="text-muted">Código: @prod.Codigo</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-primary rounded-pill mb-1">@prod.CantidadTotalVendida uds</span>
+                                        <div class="text-success fw-bold">L. @prod.TotalGenerado.ToString("N2")</div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100 border-success">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-award"></i> Mejores Clientes</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @if (!mejoresClientes.Any())
+                            {
+                                <li class="list-group-item text-muted">No hay facturas registradas aún.</li>
+                            }
+                            @foreach (var cliente in mejoresClientes)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">@cliente.Nombre</div>
+                                        <small class="text-muted">RTN/DNI: @cliente.IdentidadRTN</small>
+                                    </div>
+                                    <span class="badge bg-success fs-6">L. @cliente.TotalFacturado.ToString("N2")</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-bar-chart-fill text-primary"></i> Ventas Mensuales (@DateTime.Now.Year)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 300px;">
+                            <canvas id="ventasChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Alertas de Inventario Bajo (Stock menor a 5)</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!inventarioBajo.Any())
+                        {
+                            <div class="alert alert-success mb-0">
+                                <i class="bi bi-check-circle"></i> Todo el inventario se encuentra en niveles óptimos.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Producto</th>
+                                            <th class="text-end">Precio</th>
+                                            <th class="text-center">Stock Actual</th>
+                                            <th class="text-center">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in inventarioBajo)
+                                        {
+                                            <tr>
+                                                <td>@item.Codigo</td>
+                                                <td class="fw-bold">@item.Nombre</td>
+                                                <td class="text-end">L. @item.Precio.ToString("N2")</td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-danger fs-6">@item.Stock</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <a href="/productos/editar/@item.IdProductos" class="btn btn-sm btn-outline-primary">Reabastecer</a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool cargando = true;
+    private List<ReporteProductoMasVendidoDto> topProductos = new();
+    private List<ReporteClienteFacturacionDto> mejoresClientes = new();
+    private List<ProductoDto> inventarioBajo = new();
+    private List<ReporteVentasPorMesDto> ventasMensuales = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var anioActual = DateTime.Now.Year;
+            var taskProductos = ReporteService.ObtenerTopProductosAsync();
+            var taskClientes = ReporteService.ObtenerMejoresClientesAsync();
+            var taskInventario = ReporteService.ObtenerInventarioBajoAsync();
+            var taskVentas = ReporteService.ObtenerVentasPorMesAsync(anioActual);
+
+            await Task.WhenAll(taskProductos, taskClientes, taskInventario, taskVentas);
+
+            topProductos = taskProductos.Result;
+            mejoresClientes = taskClientes.Result;
+            inventarioBajo = taskInventario.Result;
+            ventasMensuales = taskVentas.Result;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!cargando && ventasMensuales.Any())
+        {            
+            var etiquetas = ventasMensuales.Select(v => v.NombreMes).ToArray();
+            var datos = ventasMensuales.Select(v => v.TotalVentas).ToArray();
+            
+            await JsRuntime.InvokeVoidAsync("renderizarGraficoVentas", etiquetas, datos);
+        }
+    }
+}

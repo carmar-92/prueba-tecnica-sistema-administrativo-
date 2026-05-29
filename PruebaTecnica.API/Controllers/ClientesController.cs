@@ -37,8 +37,7 @@ namespace PruebaTecnica.API.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Crear([FromBody] Cliente cliente)
-        {
-            // Validaciones básicas requeridas por la prueba
+        {           
             if (string.IsNullOrWhiteSpace(cliente.Nombre) || string.IsNullOrWhiteSpace(cliente.IdentidadRTN))
                 return BadRequest("El nombre y la Identidad/RTN son obligatorios.");
 
@@ -58,6 +57,29 @@ namespace PruebaTecnica.API.Controllers
             if (!exito) return StatusCode(500, "Error al actualizar el cliente.");
 
             return Ok(new { mensaje = "Cliente actualizado exitosamente." });
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> ObtenerPorId(int id)
+        {            
+            var cliente = await _clienteRepository.ObtenerPorIdAsync(id);
+
+            if (cliente == null)
+            {
+                return NotFound(new { mensaje = "El cliente solicitado no existe." });
+            }
+
+            return Ok(cliente);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            var exito = await _clienteRepository.EliminarLogicoAsync(id);
+            if (!exito)
+                return StatusCode(500, "Error al desactivar el cliente en la base de datos.");
+
+            return Ok(new { mensaje = "Cliente desactivado exitosamente." });
         }
     }
 }

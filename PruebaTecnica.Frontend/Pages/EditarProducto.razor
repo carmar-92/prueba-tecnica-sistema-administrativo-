@@ -1,0 +1,130 @@
+﻿@page "/productos/editar/{Id:int}"
+@using PruebaTecnica.Frontend.Models
+@using PruebaTecnica.Frontend.Services
+@inject IProductoService ProductoService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">Editar Producto</h4>
+                </div>
+                <div class="card-body p-4">
+                    
+                    @if (cargandoDatos)
+                    {
+                        <div class="text-center my-4">
+                            <div class="spinner-border text-warning" role="status"></div>
+                            <p>Cargando datos del producto...</p>
+                        </div>
+                    }
+                    else if (productoEditar == null)
+                    {
+                        <div class="alert alert-danger">Producto no encontrado.</div>
+                        <a href="/productos" class="btn btn-primary">Volver al inventario</a>
+                    }
+                    else
+                    {
+                        @if (!string.IsNullOrEmpty(mensajeError))
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @mensajeError
+                            </div>
+                        }
+
+                        <EditForm Model="productoEditar" OnValidSubmit="GuardarCambios">
+                            <DataAnnotationsValidator />
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Código *</label>
+                                    <InputText class="form-control" @bind-Value="productoEditar.Codigo" required />
+                                </div>
+
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label fw-bold">Nombre del Producto *</label>
+                                    <InputText class="form-control" @bind-Value="productoEditar.Nombre" required />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Precio Unitario *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">L.</span>
+                                        <InputNumber class="form-control" @bind-Value="productoEditar.Precio" step="0.01" required />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Stock Actual *</label>
+                                    <InputNumber class="form-control" @bind-Value="productoEditar.Stock" required />
+                                </div>
+                            </div>
+
+                            <div class="mb-4 form-check form-switch">
+                                <InputCheckbox class="form-check-input" id="estadoSwitch" @bind-Value="productoEditar.Estado" />
+                                <label class="form-check-label fw-bold" for="estadoSwitch">
+                                    Producto Activo (Visible para facturar)
+                                </label>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="/productos" class="btn btn-secondary">Cancelar</a>
+                                <button type="submit" class="btn btn-warning" disabled="@cargando">
+                                    @if (cargando)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span> Actualizando...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-pencil-square"></i> <span>Actualizar Producto</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ProductoDto? productoEditar;
+    private bool cargando = false;
+    private bool cargandoDatos = true;
+    private string mensajeError = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        productoEditar = await ProductoService.ObtenerPorIdAsync(Id);
+        cargandoDatos = false;
+    }
+
+    private async Task GuardarCambios()
+    {
+        if (productoEditar == null) return;
+
+        cargando = true;
+        mensajeError = string.Empty;
+        
+        var exito = await ProductoService.EditarAsync(productoEditar);
+        
+        if (exito)
+        {
+            NavigationManager.NavigateTo("/productos");
+        }
+        else
+        {
+            mensajeError = "No se pudo actualizar el producto. Verifica que no haya otro producto con el mismo código.";
+            cargando = false;
+        }
+    }
+}

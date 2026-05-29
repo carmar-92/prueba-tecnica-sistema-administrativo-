@@ -23,6 +23,13 @@ namespace PruebaTecnica.API.Controllers
             return Ok(reporte);
         }
 
+        [HttpGet("ventas-mes/{anio}")]
+        public async Task<IActionResult> GetVentasPorMes(int anio)
+        {
+            var reporte = await _reporteRepository.VentasPorMesAsync(anio);
+            return Ok(reporte);
+        }
+
         [HttpGet("mejores-clientes")]
         public async Task<IActionResult> GetMejoresClientes()
         {

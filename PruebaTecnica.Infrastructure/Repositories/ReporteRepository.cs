@@ -18,8 +18,7 @@ namespace PruebaTecnica.Infrastructure.Repositories
         {
             var reporte = new List<ReporteProductoMasVendido>();
             using var connection = _context.CreateConnection();
-
-            // JOIN entre Detalles y Productos, agrupado y ordenado con LIMIT 5
+            
             var query = @"SELECT p.Codigo, p.Nombre AS NombreProducto, 
                                  SUM(fd.Cantidad) AS CantidadTotalVendida, 
                                  SUM(fd.Subtotal) AS TotalGenerado 
@@ -50,14 +49,13 @@ namespace PruebaTecnica.Infrastructure.Repositories
         {
             var reporte = new List<ReporteClienteFacturacion>();
             using var connection = _context.CreateConnection();
-
-            // JOIN entre Facturas y Clientes, sumando el Total
+            
             var query = @"SELECT c.Nombre, c.IdentidadRTN, SUM(f.Total) AS TotalFacturado 
                           FROM Facturas f 
                           INNER JOIN Clientes c ON f.IdClientes = c.IdClientes 
                           GROUP BY c.IdClientes, c.Nombre, c.IdentidadRTN 
                           ORDER BY TotalFacturado DESC 
-                          LIMIT 10"; // Mostramos el Top 10 de mejores clientes
+                          LIMIT 10"; 
 
             using var command = new MySqlCommand(query, (MySqlConnection)connection);
             await ((MySqlConnection)connection).OpenAsync();
@@ -79,8 +77,7 @@ namespace PruebaTecnica.Infrastructure.Repositories
         {
             var productos = new List<Producto>();
             using var connection = _context.CreateConnection();
-
-            // Filtro simple para stock menor a 5
+            
             var query = "SELECT * FROM Productos WHERE Stock < 5 AND Estado = 1 ORDER BY Stock ASC";
 
             using var command = new MySqlCommand(query, (MySqlConnection)connection);
@@ -100,6 +97,41 @@ namespace PruebaTecnica.Infrastructure.Repositories
                 });
             }
             return productos;
+        }
+                public async Task<IEnumerable<ReporteVentasPorMes>> VentasPorMesAsync(int anio)
+        {
+            var reporteFinal = new List<ReporteVentasPorMes>();
+            using var connection = _context.CreateConnection();
+            
+            var query = @"SELECT MONTH(Fecha) AS Mes, SUM(Total) AS TotalVentas 
+                  FROM Facturas 
+                  WHERE YEAR(Fecha) = @Anio 
+                  GROUP BY MONTH(Fecha)";
+
+            using var command = new MySqlCommand(query, (MySqlConnection)connection);
+            command.Parameters.AddWithValue("@Anio", anio);
+            await ((MySqlConnection)connection).OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            
+            var resultadosBD = new Dictionary<int, decimal>();
+            while (await reader.ReadAsync())
+            {
+                resultadosBD.Add(Convert.ToInt32(reader["Mes"]), Convert.ToDecimal(reader["TotalVentas"]));
+            }
+            
+            string[] nombresMeses = { "", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" };
+
+            for (int i = 1; i <= 12; i++)
+            {
+                reporteFinal.Add(new ReporteVentasPorMes
+                {
+                    Mes = i,
+                    NombreMes = nombresMeses[i],
+                    TotalVentas = resultadosBD.ContainsKey(i) ? resultadosBD[i] : 0
+                });
+            }
+
+            return reporteFinal;
         }
     }
 }

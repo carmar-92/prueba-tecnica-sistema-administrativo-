@@ -14,9 +14,8 @@ namespace PruebaTecnica.API.Controllers
     {
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IConfiguration _config;
-        private readonly IBitacoraRepository _bitacoraRepository; // 1. Agregamos la bitácora
-
-        // 2. La inyectamos en el constructor
+        private readonly IBitacoraRepository _bitacoraRepository;
+        
         public AuthController(IUsuarioRepository usuarioRepository, IConfiguration config, IBitacoraRepository bitacoraRepository)
         {
             _usuarioRepository = usuarioRepository;
@@ -30,8 +29,7 @@ namespace PruebaTecnica.API.Controllers
             var usuario = await _usuarioRepository.ObtenerPorCorreoAsync(request.Correo);
 
             if (usuario == null || usuario.Contrasena != request.Contrasena)
-            {
-                // 3. Registramos el intento fallido en la base de datos
+            {                
                 await _bitacoraRepository.RegistrarAsync(new BitacoraError
                 {
                     TipoEvento = "Intento Fallido",
@@ -46,8 +44,7 @@ namespace PruebaTecnica.API.Controllers
         }
 
         private string GenerarJwtToken(Usuario usuario)
-        {
-            // ... (Este método se queda exactamente igual a como lo tenías) ...
+        {          
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtConfig:Secret"]!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -69,7 +66,6 @@ namespace PruebaTecnica.API.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
-
     public class LoginDto
     {
         public string Correo { get; set; } = string.Empty;

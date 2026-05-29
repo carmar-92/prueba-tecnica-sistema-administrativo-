@@ -59,5 +59,14 @@ namespace PruebaTecnica.API.Controllers
 
             return Ok(new { mensaje = "Producto desactivado exitosamente." });
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> ObtenerPorId(int id)
+        {
+            var producto = await _productoRepository.ObtenerPorIdAsync(id);
+            if (producto == null) return NotFound(new { mensaje = "El producto no existe o está inactivo." });
+
+            return Ok(producto);
+        }
     }
 }

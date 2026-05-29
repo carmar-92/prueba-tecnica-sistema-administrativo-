@@ -1,0 +1,109 @@
+﻿@page "/productos"
+@using PruebaTecnica.Frontend.Models
+@using PruebaTecnica.Frontend.Services
+@inject IProductoService ProductoService
+@inject IJSRuntime JsRuntime
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Inventario de Productos</h2>
+    <a href="/productos/nuevo" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Nuevo Producto
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (listaProductos == null)
+        {
+            <div class="text-center my-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Cargando inventario...</p>
+            </div>
+        }
+        else if (!listaProductos.Any())
+        {
+            <div class="alert alert-info">No hay productos registrados en el sistema.</div>
+        }
+        else
+        {
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var producto in listaProductos)
+                    {
+                        <tr>
+                            <td><span class="badge bg-secondary">@producto.Codigo</span></td>
+                            <td>@producto.Nombre</td>
+                            <td>@producto.Precio.ToString("N2")</td>
+                            <td>
+                                @if (producto.Stock <= 5)
+                                {
+                                    <span class="text-danger fw-bold">@producto.Stock</span>
+                                }
+                                else
+                                {
+                                    @producto.Stock
+                                }
+                            </td>
+                            <td>
+                                @if (producto.Estado)
+                                {
+                                    <span class="badge bg-success">Activo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactivo</span>
+                                }
+                            </td>
+                            <td>
+                                <a href="/productos/editar/@producto.IdProductos" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarDesactivar(producto.IdProductos, producto.Nombre)">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<ProductoDto>? listaProductos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarProductos();
+    }
+
+    private async Task CargarProductos()
+    {
+        listaProductos = await ProductoService.ListarAsync();
+    }
+
+    private async Task ConfirmarDesactivar(int id, string nombre)
+    {
+        var confirmado = await JsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de que deseas eliminar el producto {nombre}?");
+
+        if (confirmado)
+        {
+            var exito = await ProductoService.DesactivarAsync(id);
+            if (exito)
+            {
+                await CargarProductos();
+            }
+        }
+    }
+}

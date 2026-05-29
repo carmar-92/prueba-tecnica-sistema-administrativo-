@@ -12,8 +12,7 @@ namespace PruebaTecnica.API.Controllers
     {
         private readonly IFacturaRepository _facturaRepository;
         private readonly IProductoRepository _productoRepository;
-
-        // Inyectamos ambos repositorios porque necesitamos validar el precio y stock de los productos
+       
         public FacturasController(IFacturaRepository facturaRepository, IProductoRepository productoRepository)
         {
             _facturaRepository = facturaRepository;
@@ -26,21 +25,20 @@ namespace PruebaTecnica.API.Controllers
             var facturas = await _facturaRepository.ListarAsync();
             return Ok(facturas);
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> CrearFactura([FromBody] CrearFacturaDto request)
         {
             if (request.Detalles == null || !request.Detalles.Any())
                 return BadRequest("La factura debe contener al menos un producto.");
 
-            // 1. Extraer el IdUsuario directamente del Token JWT por seguridad
+            // Extraer el IdUsuario directamente del Token JWT por seguridad
             var usuarioIdClaim = User.FindFirst("idUsuario")?.Value;
             if (string.IsNullOrEmpty(usuarioIdClaim))
                 return Unauthorized("Token inválido o no contiene el ID del usuario.");
 
             int idUsuario = int.Parse(usuarioIdClaim);
-
-            // 2. Inicializar la entidad Factura
+          
             var nuevaFactura = new Factura
             {
                 IdUsuarios = idUsuario,
@@ -50,7 +48,7 @@ namespace PruebaTecnica.API.Controllers
                 Detalles = new List<FacturaDetalle>()
             };
 
-            // 3. Procesar cada detalle y calcular la matemática real
+            // Procesar cada detalle y calculos matemáticos
             foreach (var item in request.Detalles)
             {
                 var productoBD = await _productoRepository.ObtenerPorIdAsync(item.IdProductos);
@@ -60,8 +58,7 @@ namespace PruebaTecnica.API.Controllers
 
                 if (productoBD.Stock < item.Cantidad)
                     return BadRequest($"Stock insuficiente para el producto '{productoBD.Nombre}'. Stock actual: {productoBD.Stock}");
-
-                // Tomamos el precio de la base de datos, NO del frontend
+                                
                 decimal subtotalLinea = productoBD.Precio * item.Cantidad;
 
                 nuevaFactura.Subtotal += subtotalLinea;
@@ -74,12 +71,10 @@ namespace PruebaTecnica.API.Controllers
                     Subtotal = subtotalLinea
                 });
             }
-
-            // 4. Calcular los totales finales (ISV 15%)
+            
             nuevaFactura.ISV = nuevaFactura.Subtotal * 0.15m;
             nuevaFactura.Total = nuevaFactura.Subtotal + nuevaFactura.ISV;
-
-            // 5. Enviar al repositorio para guardar con Transacción SQL
+            
             var exito = await _facturaRepository.CrearFacturaAsync(nuevaFactura);
 
             if (!exito)
@@ -93,7 +88,7 @@ namespace PruebaTecnica.API.Controllers
         }
     }
 
-    // DTOs para recibir solo la información estrictamente necesaria desde el Frontend
+    // DTOs para recibir solo la información necesaria desde el Frontend
     public class CrearFacturaDto
     {
         public int IdClientes { get; set; }

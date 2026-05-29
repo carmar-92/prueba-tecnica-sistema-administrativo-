@@ -1,0 +1,24 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+
+<div class="page">
+    @if (!NavigationManager.Uri.Contains("/login"))
+    {
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+    }
+
+    <main>
+        @if (!NavigationManager.Uri.Contains("/login"))
+        {
+            <div class="top-row px-4">
+                <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            </div>
+        }
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>

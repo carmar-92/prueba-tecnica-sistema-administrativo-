@@ -7,5 +7,6 @@ namespace PruebaTecnica.Core.Interfaces
         Task<IEnumerable<ReporteProductoMasVendido>> Top5ProductosMasVendidosAsync();
         Task<IEnumerable<ReporteClienteFacturacion>> ClientesMayorFacturacionAsync();
         Task<IEnumerable<Producto>> InventarioBajoAsync();
+        Task<IEnumerable<ReporteVentasPorMes>> VentasPorMesAsync(int anio);
     }
 }

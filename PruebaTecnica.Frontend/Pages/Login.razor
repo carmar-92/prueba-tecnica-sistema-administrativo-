@@ -1,0 +1,91 @@
+﻿@page "/login"
+@using PruebaTecnica.Frontend.Models
+@using PruebaTecnica.Frontend.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<div class="vh-100 d-flex justify-content-center align-items-center" style="background-color: #f4f6f9;">
+    
+    <div class="card shadow-lg border-0 rounded-4" style="width: 100%; max-width: 420px;">
+        
+        <div class="card-header bg-primary text-white text-center py-4 border-0 rounded-top-4">
+            <i class="bi bi-shield-lock-fill" style="font-size: 3rem;"></i>
+            <h3 class="mb-0 mt-2 fw-bold">Bienvenido</h3>
+            <p class="mb-0 text-white-50 small">Sistema de Gestión Interna</p>
+        </div>
+        
+        <div class="card-body p-4 p-sm-5">
+            
+            <EditForm Model="loginModel" OnValidSubmit="EjecutarLogin">
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrEmpty(mensajeError))
+                {
+                    <div class="alert alert-danger d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>@mensajeError</div>
+                    </div>
+                }
+
+                <div class="form-floating mb-3">
+                    <InputText id="correo" type="email" class="form-control rounded-3" @bind-Value="loginModel.Correo" placeholder="ejemplo@correo.com" required />
+                    <label for="correo" class="text-muted"><i class="bi bi-envelope me-2"></i>Correo Electrónico</label>
+                </div>
+
+                <div class="form-floating mb-4">
+                    <InputText id="contrasena" type="password" class="form-control rounded-3" @bind-Value="loginModel.Contrasena" placeholder="********" required />
+                    <label for="contrasena" class="text-muted"><i class="bi bi-key me-2"></i>Contraseña</label>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rememberMe">
+                        <label class="form-check-label small text-muted" for="rememberMe">Recordarme</label>
+                    </div>
+                    <a href="#" class="small text-decoration-none">¿Olvidó su clave?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 shadow-sm d-flex justify-content-center align-items-center gap-2" disabled="@cargando">
+                    @if (cargando)
+                    {
+                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                        <span>Ingresando...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-box-arrow-in-right"></i> <span>Entrar al Sistema</span>
+                    }
+                </button>
+            </EditForm>
+        </div>
+        
+        <div class="card-footer text-center py-3 bg-white border-0 rounded-bottom-4">
+            <div class="small text-muted">&copy; @DateTime.Now.Year - Todos los derechos reservados.</div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginDto loginModel = new LoginDto();
+    private string mensajeError = string.Empty;
+    private bool cargando = false;
+
+    private async Task EjecutarLogin()
+    {
+        cargando = true;
+        mensajeError = string.Empty;
+        
+        var loginExitoso = await AuthService.LoginAsync(loginModel);
+
+        if (loginExitoso)
+        {            
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            mensajeError = "Credenciales incorrectas. Verifica tu correo y contraseña.";
+        }
+
+        cargando = false;
+    }
+}

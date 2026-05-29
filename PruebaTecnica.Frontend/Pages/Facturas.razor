@@ -1,0 +1,65 @@
+﻿@page "/facturacion"
+@using PruebaTecnica.Frontend.Models
+@using PruebaTecnica.Frontend.Services
+@inject IFacturaService FacturaService
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-clock-history"></i> Historial de Facturas</h2>
+
+    <a href="/facturas/nueva" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nueva Factura
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (listaFacturas == null)
+        {
+            <div class="text-center my-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Cargando historial de facturación...</p>
+            </div>
+        }
+        else if (!listaFacturas.Any())
+        {
+            <div class="alert alert-info">Aún no se han emitido facturas en el sistema.</div>
+        }
+        else
+        {
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>N° Factura</th>
+                        <th>Fecha de Emisión</th>
+                        <th>ID Cliente</th>
+                        <th class="text-end">Subtotal</th>
+                        <th class="text-end">ISV (15%)</th>
+                        <th class="text-end">Total Pagado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var factura in listaFacturas)
+                    {
+                        <tr>
+                            <td><span class="badge bg-secondary">FAC-@factura.IdFacturas.ToString("D4")</span></td>
+                            <td>@factura.Fecha.ToString("dd/MM/yyyy hh:mm tt")</td>
+                            <td>@factura.IdClientes</td>
+                            <td class="text-end text-muted">L. @factura.Subtotal.ToString("N2")</td>
+                            <td class="text-end text-muted">L. @factura.ISV.ToString("N2")</td>
+                            <td class="text-end fw-bold text-success">L. @factura.Total.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<FacturaDto>? listaFacturas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaFacturas = await FacturaService.ListarAsync();
+    }
+}

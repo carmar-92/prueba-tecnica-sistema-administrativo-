@@ -19,7 +19,6 @@ namespace PruebaTecnica.Infrastructure.Repositories
         {
             var productos = new List<Producto>();
             using var connection = _context.CreateConnection();
-            // Listamos solo los productos activos
             var query = "SELECT * FROM Productos WHERE Estado = 1";
 
             using var command = new MySqlCommand(query, (MySqlConnection)connection);
@@ -27,18 +26,28 @@ namespace PruebaTecnica.Infrastructure.Repositories
             using var reader = await command.ExecuteReaderAsync();
 
             while (await reader.ReadAsync())
-            {
-                productos.Add(new Producto
-                {
-                    IdProductos = Convert.ToInt32(reader["IdProductos"]),
-                    Codigo = reader["Codigo"].ToString()!,
-                    Nombre = reader["Nombre"].ToString()!,
-                    Precio = Convert.ToDecimal(reader["Precio"]),
-                    Stock = Convert.ToInt32(reader["Stock"]),
-                    Estado = Convert.ToBoolean(reader["Estado"])
-                });
+            {                
+                productos.Add(MapearProducto(reader));
             }
             return productos;
+        }
+
+        public async Task<Producto?> ObtenerPorIdAsync(int id)
+        {
+            using var connection = _context.CreateConnection();
+            var query = "SELECT * FROM Productos WHERE IdProductos = @Id AND Estado = 1";
+
+            using var command = new MySqlCommand(query, (MySqlConnection)connection);
+            command.Parameters.AddWithValue("@Id", id);
+
+            await ((MySqlConnection)connection).OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return MapearProducto(reader);
+            }
+            return null;
         }
 
         public async Task<bool> CrearAsync(Producto producto)
@@ -79,7 +88,7 @@ namespace PruebaTecnica.Infrastructure.Repositories
         public async Task<bool> DesactivarAsync(int id)
         {
             using var connection = _context.CreateConnection();
-            
+
             var query = "UPDATE Productos SET Estado = 0 WHERE IdProductos = @Id";
 
             using var command = new MySqlCommand(query, (MySqlConnection)connection);
@@ -88,32 +97,18 @@ namespace PruebaTecnica.Infrastructure.Repositories
             await ((MySqlConnection)connection).OpenAsync();
             return await command.ExecuteNonQueryAsync() > 0;
         }
-        public async Task<Producto?> ObtenerPorIdAsync(int id)
+       
+        private Producto MapearProducto(IDataReader reader)
         {
-            using var connection = _context.CreateConnection();
-            var query = "SELECT * FROM Productos WHERE IdProductos = @Id AND Estado = 1";
-
-            using var command = new MySqlCommand(query, (MySqlConnection)connection);
-            command.Parameters.AddWithValue("@Id", id);
-
-            await ((MySqlConnection)connection).OpenAsync();
-            using var reader = await command.ExecuteReaderAsync();
-
-            if (await reader.ReadAsync())
+            return new Producto
             {
-                return new Producto
-                {
-                    IdProductos = Convert.ToInt32(reader["IdProductos"]),
-                    Codigo = reader["Codigo"].ToString()!,
-                    Nombre = reader["Nombre"].ToString()!,
-                    Precio = Convert.ToDecimal(reader["Precio"]),
-                    Stock = Convert.ToInt32(reader["Stock"]),
-                    Estado = Convert.ToBoolean(reader["Estado"])
-                };
-            }
-            return null;
+                IdProductos = Convert.ToInt32(reader["IdProductos"]),
+                Codigo = reader["Codigo"].ToString()!,
+                Nombre = reader["Nombre"].ToString()!,
+                Precio = Convert.ToDecimal(reader["Precio"]),
+                Stock = Convert.ToInt32(reader["Stock"]),
+                Estado = Convert.ToBoolean(reader["Estado"])
+            };
         }
     }
-
-
 }

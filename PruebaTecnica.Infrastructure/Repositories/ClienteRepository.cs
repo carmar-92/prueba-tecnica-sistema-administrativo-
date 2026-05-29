@@ -36,8 +36,7 @@ namespace PruebaTecnica.Infrastructure.Repositories
         public async Task<IEnumerable<Cliente>> BuscarAsync(string termino)
         {
             var clientes = new List<Cliente>();
-            using var connection = _context.CreateConnection();
-            // Buscar clientes por nombre, RTN/Identidad o correo
+            using var connection = _context.CreateConnection();            
             var query = @"SELECT * FROM Clientes 
                           WHERE Estado = 1 AND 
                           (Nombre LIKE @Termino OR IdentidadRTN LIKE @Termino OR Correo LIKE @Termino)";
@@ -90,8 +89,7 @@ namespace PruebaTecnica.Infrastructure.Repositories
             await ((MySqlConnection)connection).OpenAsync();
             return await command.ExecuteNonQueryAsync() > 0;
         }
-
-        // Método auxiliar para no repetir código al leer datos
+                
         private Cliente MapearCliente(IDataReader reader)
         {
             return new Cliente
@@ -105,5 +103,37 @@ namespace PruebaTecnica.Infrastructure.Repositories
                 Estado = Convert.ToBoolean(reader["Estado"])
             };
         }
+
+        public async Task<Cliente> ObtenerPorIdAsync(int id)
+        {
+            using var connection = _context.CreateConnection();
+            var query = "SELECT * FROM Clientes WHERE IdClientes = @Id";
+
+            using var command = new MySqlCommand(query, (MySqlConnection)connection);
+            command.Parameters.AddWithValue("@Id", id);
+
+            await ((MySqlConnection)connection).OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            
+            if (await reader.ReadAsync())
+            {
+                return MapearCliente(reader);
+            }
+            
+            return null!;
+        }
+        public async Task<bool> EliminarLogicoAsync(int id)
+        {
+            using var connection = _context.CreateConnection();
+            
+            var query = "UPDATE Clientes SET Estado = 0 WHERE IdClientes = @Id";
+
+            using var command = new MySqlCommand(query, (MySqlConnection)connection);
+            command.Parameters.AddWithValue("@Id", id);
+
+            await ((MySqlConnection)connection).OpenAsync();
+            return await command.ExecuteNonQueryAsync() > 0;
+        }
+
     }
 }

@@ -1,0 +1,317 @@
+﻿@page "/facturas/nueva"
+@using PruebaTecnica.Frontend.Models
+@using PruebaTecnica.Frontend.Services
+@inject IFacturaService FacturaService
+@inject IClienteService ClienteService
+@inject IProductoService ProductoService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-receipt"></i> Nueva Factura</h2>
+        <a href="/facturacion" class="btn btn-outline-secondary">Volver al Historial</a>
+    </div>
+
+    @if (cargandoCatalogos)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Cargando catálogos...</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-5">
+                
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">1. Datos del Cliente</h5>
+                    </div>
+                    <div class="card-body">
+                        <label class="form-label fw-bold">Seleccionar Cliente *</label>
+                        <select class="form-select" @bind="idClienteSeleccionado">
+                            <option value="0">-- Seleccione un cliente --</option>
+                            @foreach (var cliente in listaClientes)
+                            {
+                                <option value="@cliente.Id">@cliente.Identificacion - @cliente.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">2. Agregar Producto</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Producto *</label>
+                            <select class="form-select" @bind="idProductoSeleccionado">
+                                <option value="0">-- Seleccione un producto --</option>
+                                @foreach (var prod in listaProductos)
+                                {
+                                    <option value="@prod.IdProductos">@prod.Codigo - @prod.Nombre (Stock: @prod.Stock) - L. @prod.Precio.ToString("N2")</option>
+                                }
+                            </select>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Cantidad *</label>
+                                <input type="number" class="form-control" @bind="cantidadSeleccionada" min="1" />
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" @onclick="AgregarAlCarrito">
+                                    <i class="bi bi-cart-plus"></i> Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(mensajeError))
+                {
+                    <div class="alert alert-danger">@mensajeError</div>
+                }
+
+            </div>
+
+            <div class="col-md-7">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">3. Detalle de Factura</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end">Precio</th>
+                                    <th class="text-end">Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!carrito.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            No hay productos en el detalle.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var item in carrito)
+                                    {
+                                        <tr>
+                                            <td>@item.NombreProducto</td>
+                                            <td class="text-center">@item.Cantidad</td>
+                                            <td class="text-end">L. @item.Precio.ToString("N2")</td>
+                                            <td class="text-end fw-bold">L. @item.Subtotal.ToString("N2")</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarDelCarrito(item.IdProducto)">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="row justify-content-end">
+                            <div class="col-md-6">
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <td class="text-end">Subtotal:</td>
+                                        <td class="text-end">L. @subtotalTotal.ToString("N2")</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-end">ISV (15%):</td>
+                                        <td class="text-end">L. @isvTotal.ToString("N2")</td>
+                                    </tr>
+                                    <tr class="fs-5 fw-bold text-success border-top">
+                                        <td class="text-end">TOTAL:</td>
+                                        <td class="text-end">L. @granTotal.ToString("N2")</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 text-end">
+                            <button class="btn btn-success btn-lg" disabled="@cargandoGuardado" @onclick="ProcesarFactura">
+                                @if (cargandoGuardado)
+                                {
+                                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                    <span> Procesando...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i> <span>Facturar</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    // ESTADOS Y DATOS
+    private bool cargandoCatalogos = true;
+    private bool cargandoGuardado = false;
+    private string mensajeError = string.Empty;
+
+    // Catálogos
+    private List<ClienteDto> listaClientes = new();
+    private List<ProductoDto> listaProductos = new();
+
+    // Controles de formulario
+    private int idClienteSeleccionado = 0;
+    private int idProductoSeleccionado = 0;
+    private int cantidadSeleccionada = 1;
+
+    // Carrito de compras en memoria
+    private List<DetalleUI> carrito = new();
+
+    // Totales
+    private decimal subtotalTotal = 0;
+    private decimal isvTotal = 0;
+    private decimal granTotal = 0;
+
+    // CLASE AUXILIAR PARA LA INTERFAZ
+     
+    private class DetalleUI
+    {
+        public int IdProducto { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public decimal Precio { get; set; }
+        public int Cantidad { get; set; }
+        public decimal Subtotal => Precio * Cantidad;
+    }
+
+    // MÉTODOS
+    protected override async Task OnInitializedAsync()
+    {        
+        listaClientes = await ClienteService.ObtenerClientesAsync();
+        listaProductos = await ProductoService.ListarAsync();
+        cargandoCatalogos = false;
+    }
+
+    private void AgregarAlCarrito()
+    {
+        mensajeError = string.Empty;
+
+        if (idProductoSeleccionado == 0)
+        {
+            mensajeError = "Por favor, seleccione un producto.";
+            return;
+        }
+
+        if (cantidadSeleccionada <= 0)
+        {
+            mensajeError = "La cantidad debe ser mayor a cero.";
+            return;
+        }
+
+        var productoBase = listaProductos.FirstOrDefault(p => p.IdProductos == idProductoSeleccionado);
+        if (productoBase == null) return;
+
+        // Validamos el stock contra lo que ya tenemos en el carrito
+        var cantidadYaEnCarrito = carrito.Where(c => c.IdProducto == idProductoSeleccionado).Sum(c => c.Cantidad);
+        if (productoBase.Stock < (cantidadYaEnCarrito + cantidadSeleccionada))
+        {
+            mensajeError = $"No hay stock suficiente. Stock disponible: {productoBase.Stock}.";
+            return;
+        }
+
+        // Si el producto ya está en el carrito, sumamos la cantidad
+        var itemExistente = carrito.FirstOrDefault(c => c.IdProducto == idProductoSeleccionado);
+        if (itemExistente != null)
+        {
+            itemExistente.Cantidad += cantidadSeleccionada;
+        }
+        else
+        {
+            // Si no está, lo agregamos como una nueva línea
+            carrito.Add(new DetalleUI
+            {
+                IdProducto = productoBase.IdProductos,
+                NombreProducto = productoBase.Nombre,
+                Precio = productoBase.Precio,
+                Cantidad = cantidadSeleccionada
+            });
+        }
+
+        // Limpiamos los campos de entrada y recalculamos
+        idProductoSeleccionado = 0;
+        cantidadSeleccionada = 1;
+        RecalcularTotales();
+    }
+
+    private void EliminarDelCarrito(int idProducto)
+    {
+        var item = carrito.FirstOrDefault(c => c.IdProducto == idProducto);
+        if (item != null)
+        {
+            carrito.Remove(item);
+            RecalcularTotales();
+        }
+    }
+
+    private void RecalcularTotales()
+    {
+        subtotalTotal = carrito.Sum(c => c.Subtotal);
+        isvTotal = subtotalTotal * 0.15m; 
+        granTotal = subtotalTotal + isvTotal;
+    }
+
+    private async Task ProcesarFactura()
+    {
+        mensajeError = string.Empty;
+
+        if (idClienteSeleccionado == 0)
+        {
+            mensajeError = "Por favor, seleccione un cliente para la factura.";
+            return;
+        }
+
+        if (!carrito.Any())
+        {
+            mensajeError = "Debe agregar al menos un producto a la factura.";
+            return;
+        }
+
+        cargandoGuardado = true;
+        
+        var peticion = new CrearFacturaDto
+        {
+            IdClientes = idClienteSeleccionado,
+            Detalles = carrito.Select(c => new DetalleFacturaDto
+            {
+                IdProductos = c.IdProducto,
+                Cantidad = c.Cantidad
+            }).ToList()
+        };
+
+        var exito = await FacturaService.CrearFacturaAsync(peticion);
+
+        if (exito)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "¡Factura procesada con éxito y stock descontado!");
+            NavigationManager.NavigateTo("/facturacion");
+        }
+        else
+        {
+            mensajeError = "Hubo un error al procesar la factura. Es posible que el stock haya cambiado.";
+            cargandoGuardado = false;
+        }
+    }
+}

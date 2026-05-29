@@ -22,13 +22,12 @@ builder.Services.AddScoped<IReporteRepository, ReporteRepository>();
 // Configuración de CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
 // Configuración de Autenticación con JWT
@@ -101,12 +100,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// 4. Activar CORS y Seguridad en el pipeline
-app.UseCors("AllowFrontend");
+app.UseCors("PermitirFrontend");
 app.UseAuthentication(); 
 app.UseAuthorization();  
-
 app.MapControllers();
-
 app.Run();
