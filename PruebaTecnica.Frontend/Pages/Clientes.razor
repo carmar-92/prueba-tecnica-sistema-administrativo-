@@ -12,7 +12,14 @@
 </div>
 
 <div class="card shadow-sm">
-    <div class="card-body">
+    <div class="card-header bg-white py-3">
+        <div class="input-group" style="max-width: 400px;">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" placeholder="Buscar por nombre, identidad o correo..." @bind="terminoBusqueda" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="card-body p-0">
         @if (listaClientes == null)
         {
             <div class="text-center my-5">
@@ -22,69 +29,92 @@
         }
         else if (!listaClientes.Any())
         {
-            <div class="alert alert-info">No hay clientes registrados en el sistema.</div>
+            <div class="alert alert-info m-3">No hay clientes registrados en el sistema.</div>
         }
         else
         {
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Identificación</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var cliente in listaClientes)
-                    {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <td>@cliente.Id</td>
-                            <td>@cliente.Nombre</td>
-                            <td>@cliente.Identificacion</td>
-                            <td>
-                                @if (cliente.Estado)
-                                {
-                                    <span class="badge bg-success">Activo</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">Inactivo</span>
-                                }
-                            </td>
-                            <td>
-                                <a href="/clientes/editar/@cliente.Id" class="btn btn-sm btn-outline-primary">Editar</a>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarEliminar(cliente.Id, cliente.Nombre)">
-                                    <i class="bi bi-trash"></i> Eliminar
-                                </button>
-                            </td>                           
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Identificación</th>
+                            <th>Teléfono</th>
+                            <th>Correo</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
-
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @if (!clientesFiltrados.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">No se encontraron clientes con esa búsqueda.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var cliente in clientesFiltrados)
+                            {
+                                <tr>
+                                    <td>@cliente.Id</td>
+                                    <td class="fw-bold">@cliente.Nombre</td>
+                                    <td>@cliente.Identificacion</td>
+                                    <td>@(string.IsNullOrEmpty(cliente.Telefono) ? "N/A" : cliente.Telefono)</td>
+                                    <td>@(string.IsNullOrEmpty(cliente.Correo) ? "N/A" : cliente.Correo)</td>
+                                    <td>
+                                        @if (cliente.Estado)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="/clientes/editar/@cliente.Id" class="btn btn-sm btn-outline-primary me-1">Editar</a>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarEliminar(cliente.Id, cliente.Nombre)">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
     </div>
 </div>
 
 @code {
     private List<ClienteDto>? listaClientes;
+    private string terminoBusqueda = string.Empty;
+  
+    private IEnumerable<ClienteDto> clientesFiltrados =>
+        string.IsNullOrWhiteSpace(terminoBusqueda)
+            ? listaClientes ?? new List<ClienteDto>()
+            : listaClientes!.Where(c =>
+                (c.Nombre != null && c.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) ||
+                (c.Identificacion != null && c.Identificacion.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) ||
+                (c.Correo != null && c.Correo.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)));
 
     protected override async Task OnInitializedAsync()
-    {        
+    {
         listaClientes = await ClienteService.ObtenerClientesAsync();
     }
 
     private async Task ConfirmarEliminar(int id, string nombre)
-    {        
+    {
         var confirmado = await JsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de que deseas eliminar al cliente {nombre}?");
 
         if (confirmado)
         {
             var exito = await ClienteService.EliminarClienteAsync(id);
             if (exito)
-            {                
+            {
                 listaClientes = await ClienteService.ObtenerClientesAsync();
             }
         }

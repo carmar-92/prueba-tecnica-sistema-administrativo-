@@ -2,6 +2,7 @@
 using PruebaTecnica.Core.Entities;
 using PruebaTecnica.Core.Interfaces;
 using PruebaTecnica.Infrastructure.Data;
+using System.Data;
 
 namespace PruebaTecnica.Infrastructure.Repositories
 {
@@ -18,17 +19,11 @@ namespace PruebaTecnica.Infrastructure.Repositories
         {
             var reporte = new List<ReporteProductoMasVendido>();
             using var connection = _context.CreateConnection();
-            
-            var query = @"SELECT p.Codigo, p.Nombre AS NombreProducto, 
-                                 SUM(fd.Cantidad) AS CantidadTotalVendida, 
-                                 SUM(fd.Subtotal) AS TotalGenerado 
-                          FROM FacturaDetalles fd 
-                          INNER JOIN Productos p ON fd.IdProductos = p.IdProductos 
-                          GROUP BY p.IdProductos, p.Codigo, p.Nombre 
-                          ORDER BY CantidadTotalVendida DESC 
-                          LIMIT 5";
 
-            using var command = new MySqlCommand(query, (MySqlConnection)connection);
+            // Utilización de Procedimiento Almacenado para obtener los 5 productos más vendidos
+            using var command = new MySqlCommand("sp_TopProductosVendidos", (MySqlConnection)connection);
+            command.CommandType = CommandType.StoredProcedure;
+
             await ((MySqlConnection)connection).OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
 
@@ -37,8 +32,8 @@ namespace PruebaTecnica.Infrastructure.Repositories
                 reporte.Add(new ReporteProductoMasVendido
                 {
                     Codigo = reader["Codigo"].ToString()!,
-                    NombreProducto = reader["NombreProducto"].ToString()!,
-                    CantidadTotalVendida = Convert.ToInt32(reader["CantidadTotalVendida"]),
+                    NombreProducto = reader["Nombre"].ToString()!,
+                    CantidadTotalVendida = Convert.ToInt32(reader["TotalVendido"]),
                     TotalGenerado = Convert.ToDecimal(reader["TotalGenerado"])
                 });
             }
@@ -49,15 +44,11 @@ namespace PruebaTecnica.Infrastructure.Repositories
         {
             var reporte = new List<ReporteClienteFacturacion>();
             using var connection = _context.CreateConnection();
-            
-            var query = @"SELECT c.Nombre, c.IdentidadRTN, SUM(f.Total) AS TotalFacturado 
-                          FROM Facturas f 
-                          INNER JOIN Clientes c ON f.IdClientes = c.IdClientes 
-                          GROUP BY c.IdClientes, c.Nombre, c.IdentidadRTN 
-                          ORDER BY TotalFacturado DESC 
-                          LIMIT 10"; 
 
-            using var command = new MySqlCommand(query, (MySqlConnection)connection);
+            // Utilización de Procedimiento Almacenado para obtener clientes con mayor facturación
+            using var command = new MySqlCommand("sp_MejoresClientes", (MySqlConnection)connection);
+            command.CommandType = CommandType.StoredProcedure;
+
             await ((MySqlConnection)connection).OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
 
@@ -77,10 +68,11 @@ namespace PruebaTecnica.Infrastructure.Repositories
         {
             var productos = new List<Producto>();
             using var connection = _context.CreateConnection();
-            
-            var query = "SELECT * FROM Productos WHERE Stock < 5 AND Estado = 1 ORDER BY Stock ASC";
 
-            using var command = new MySqlCommand(query, (MySqlConnection)connection);
+            // Utilización de Procedimiento Almacenado para obtener productos con stock bajo
+            using var command = new MySqlCommand("sp_InventarioBajo", (MySqlConnection)connection);
+            command.CommandType = CommandType.StoredProcedure;
+
             await ((MySqlConnection)connection).OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
 
@@ -88,21 +80,22 @@ namespace PruebaTecnica.Infrastructure.Repositories
             {
                 productos.Add(new Producto
                 {
-                    IdProductos = Convert.ToInt32(reader["IdProductos"]),
+                    IdProductos = 0,
                     Codigo = reader["Codigo"].ToString()!,
                     Nombre = reader["Nombre"].ToString()!,
-                    Precio = Convert.ToDecimal(reader["Precio"]),
+                    Precio = 0,
                     Stock = Convert.ToInt32(reader["Stock"]),
-                    Estado = Convert.ToBoolean(reader["Estado"])
+                    Estado = true
                 });
             }
             return productos;
         }
-                public async Task<IEnumerable<ReporteVentasPorMes>> VentasPorMesAsync(int anio)
+
+        public async Task<IEnumerable<ReporteVentasPorMes>> VentasPorMesAsync(int anio)
         {
             var reporteFinal = new List<ReporteVentasPorMes>();
             using var connection = _context.CreateConnection();
-            
+
             var query = @"SELECT MONTH(Fecha) AS Mes, SUM(Total) AS TotalVentas 
                   FROM Facturas 
                   WHERE YEAR(Fecha) = @Anio 
@@ -112,13 +105,13 @@ namespace PruebaTecnica.Infrastructure.Repositories
             command.Parameters.AddWithValue("@Anio", anio);
             await ((MySqlConnection)connection).OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
-            
+
             var resultadosBD = new Dictionary<int, decimal>();
             while (await reader.ReadAsync())
             {
                 resultadosBD.Add(Convert.ToInt32(reader["Mes"]), Convert.ToDecimal(reader["TotalVentas"]));
             }
-            
+
             string[] nombresMeses = { "", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" };
 
             for (int i = 1; i <= 12; i++)

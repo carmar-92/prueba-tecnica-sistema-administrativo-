@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementos de la solución", "Elementos de la solución", "{D107F4C8-89CC-BEA8-D3D7-CA6B7733353D}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
+		Script_PruebaTecnicaDB_Completo.sql = Script_PruebaTecnicaDB_Completo.sql
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PruebaTecnica.Frontend", "PruebaTecnica.Frontend\PruebaTecnica.Frontend.csproj", "{4132EE37-F0CC-4E08-B846-FE3C814CC553}"

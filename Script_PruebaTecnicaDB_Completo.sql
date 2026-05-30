@@ -78,7 +78,7 @@ CREATE TABLE `clientes` (
 
 LOCK TABLES `clientes` WRITE;
 /*!40000 ALTER TABLE `clientes` DISABLE KEYS */;
-INSERT INTO `clientes` VALUES (1,'Roberto Lagos','0801-1988-04549','9875-4512','roberto87lagos@gmail.com','2026-05-27 14:55:04',1),(2,'Juan López','0801-1986-04578','9876-2545','juan25@gmail.com','2026-05-29 06:37:23',0),(3,'Luis Rodriguez','0801-1996-05478','9456-5878','luigi@gmail.com','2026-05-29 07:32:09',1),(4,'María Rodríguez','0809-1967-00085','9654-2575','maria2r@gmail.com','2026-05-29 11:53:53',1);
+INSERT INTO `clientes` VALUES (1,'Roberto Lagos','0801-1988-04541','9875-4512','roberto87lagos@gmail.com','2026-05-27 14:55:04',1),(2,'Juan López','0801-1986-04578','9876-2545','juan25@gmail.com','2026-05-29 06:37:23',0),(3,'Luis Rodriguez','0801-1996-05478','9456-5878','luigi@gmail.com','2026-05-29 07:32:09',1),(4,'María Rodríguez','0809-1967-00085','9654-2575','maria2r@gmail.com','2026-05-29 11:53:53',1);
 /*!40000 ALTER TABLE `clientes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -101,7 +101,7 @@ CREATE TABLE `facturadetalles` (
   KEY `IdProductos` (`IdProductos`),
   CONSTRAINT `facturadetalles_ibfk_1` FOREIGN KEY (`IdFacturas`) REFERENCES `facturas` (`IdFacturas`),
   CONSTRAINT `facturadetalles_ibfk_2` FOREIGN KEY (`IdProductos`) REFERENCES `productos` (`IdProductos`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -110,7 +110,7 @@ CREATE TABLE `facturadetalles` (
 
 LOCK TABLES `facturadetalles` WRITE;
 /*!40000 ALTER TABLE `facturadetalles` DISABLE KEYS */;
-INSERT INTO `facturadetalles` VALUES (1,1,3,2,28500.00,57000.00),(2,2,1,3,5000.00,15000.00),(3,2,27,1,45000.00,45000.00),(4,3,1,6,5000.00,30000.00),(5,4,15,2,16500.00,33000.00);
+INSERT INTO `facturadetalles` VALUES (1,1,3,2,28500.00,57000.00),(2,2,1,3,5000.00,15000.00),(3,2,27,1,45000.00,45000.00),(4,3,1,6,5000.00,30000.00),(5,4,15,2,16500.00,33000.00),(6,5,15,1,16500.00,16500.00),(7,5,1,2,5000.00,10000.00);
 /*!40000 ALTER TABLE `facturadetalles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -134,7 +134,7 @@ CREATE TABLE `facturas` (
   KEY `IdClientes` (`IdClientes`),
   CONSTRAINT `facturas_ibfk_1` FOREIGN KEY (`IdUsuarios`) REFERENCES `usuarios` (`IdUsuarios`),
   CONSTRAINT `facturas_ibfk_2` FOREIGN KEY (`IdClientes`) REFERENCES `clientes` (`IdClientes`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -143,7 +143,7 @@ CREATE TABLE `facturas` (
 
 LOCK TABLES `facturas` WRITE;
 /*!40000 ALTER TABLE `facturas` DISABLE KEYS */;
-INSERT INTO `facturas` VALUES (1,1,1,'2026-05-29 14:10:17',57000.00,8550.00,65550.00),(2,1,3,'2026-05-29 14:12:43',60000.00,9000.00,69000.00),(3,1,4,'2026-05-29 14:16:57',30000.00,4500.00,34500.00),(4,1,1,'2026-05-29 14:18:01',33000.00,4950.00,37950.00);
+INSERT INTO `facturas` VALUES (1,1,1,'2026-05-29 14:10:17',57000.00,8550.00,65550.00),(2,1,3,'2026-05-29 14:12:43',60000.00,9000.00,69000.00),(3,1,4,'2026-05-29 14:16:57',30000.00,4500.00,34500.00),(4,1,1,'2026-05-29 14:18:01',33000.00,4950.00,37950.00),(5,1,3,'2026-05-29 19:14:10',26500.00,3975.00,30475.00);
 /*!40000 ALTER TABLE `facturas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -173,7 +173,7 @@ CREATE TABLE `productos` (
 
 LOCK TABLES `productos` WRITE;
 /*!40000 ALTER TABLE `productos` DISABLE KEYS */;
-INSERT INTO `productos` VALUES (1,'MOVIL-0001','SAMSUNG A25',5000.00,2,1),(2,'MOVIL-0002','Samsung A21s',3600.00,15,1),(3,'MOVIL-0003','Samsung Galaxy S24 Ultra',28500.00,6,1),(4,'MOVIL-0004','Xiaomi Redmi Note 13 Pro',6500.00,20,1),(5,'MOVIL-0005','iPhone 15 Pro Max',32000.00,5,1),(6,'MOVIL-0006','Motorola Edge 50 Ultra',14500.00,12,1),(7,'MOVIL-0007','Samsung Galaxy A55',8500.00,18,1),(8,'MOVIL-0008','Huawei Nova 12 SE',7200.00,0,0),(9,'MOVIL-0009','Sony Xperia 1 VI',24000.00,3,1),(10,'MOVIL-0010','Google Pixel 8 Pro',19500.00,7,1),(11,'MOVIL-0011','Xiaomi Poco X6 Pro',5800.00,25,1),(12,'MOVIL-0012','iPhone 14 Plus',21000.00,6,1),(13,'MOVIL-0013','Motorola Moto G84',4500.00,15,1),(14,'MOVIL-0014','Samsung Galaxy Z Fold 6',38000.00,2,1),(15,'LAPTOP-001','HP Pavilion 15 Ryzen 7',16500.00,8,1),(16,'LAPTOP-002','Dell Inspiron 14 Intel i5',14200.00,14,1),(17,'LAPTOP-003','Lenovo IdeaPad Slim 3',11500.00,20,1),(18,'LAPTOP-004','ASUS ROG Strix G16 Gaming',34000.00,4,1),(19,'LAPTOP-005','Apple MacBook Air M3',27500.00,8,1),(20,'LAPTOP-006','Acer Nitro V15 Gaming',18900.00,11,1),(21,'LAPTOP-007','MSI Thin 15 Intel i7',22500.00,6,1),(22,'LAPTOP-008','Huawei MateBook D16',15800.00,9,1),(23,'LAPTOP-009','Lenovo ThinkPad E14',19200.00,12,1),(24,'LAPTOP-010','Dell Vostro 3400',12000.00,0,0),(25,'LAPTOP-011','HP Victus 16 Rtx 4050',21500.00,7,1),(26,'LAPTOP-012','ASUS Zenbook 14 OLED',25000.00,5,1),(27,'LAPTOP-013','Apple MacBook Pro M3 Pro',45000.00,2,1);
+INSERT INTO `productos` VALUES (1,'MOVIL-0001','SAMSUNG A25',5000.00,13,1),(2,'MOVIL-0002','Samsung A21s',3600.00,15,1),(3,'MOVIL-0003','Samsung Galaxy S24 Ultra',28500.00,6,1),(4,'MOVIL-0004','Xiaomi Redmi Note 13 Pro',6500.00,20,1),(5,'MOVIL-0005','iPhone 15 Pro Max',32000.00,5,1),(6,'MOVIL-0006','Motorola Edge 50 Ultra',14500.00,12,1),(7,'MOVIL-0007','Samsung Galaxy A55',8500.00,18,1),(8,'MOVIL-0008','Huawei Nova 12 SE',7200.00,0,0),(9,'MOVIL-0009','Sony Xperia 1 VI',24000.00,3,1),(10,'MOVIL-0010','Google Pixel 8 Pro',19500.00,7,1),(11,'MOVIL-0011','Xiaomi Poco X6 Pro',5800.00,25,1),(12,'MOVIL-0012','iPhone 14 Plus',21000.00,6,1),(13,'MOVIL-0013','Motorola Moto G84',4500.00,15,1),(14,'MOVIL-0014','Samsung Galaxy Z Fold 6',38000.00,2,1),(15,'LAPTOP-001','HP Pavilion 15 Ryzen 7',16500.00,7,1),(16,'LAPTOP-002','Dell Inspiron 14 Intel i5',14200.00,14,1),(17,'LAPTOP-003','Lenovo IdeaPad Slim 3',11500.00,20,1),(18,'LAPTOP-004','ASUS ROG Strix G16 Gaming',34000.00,5,1),(19,'LAPTOP-005','Apple MacBook Air M3',27500.00,8,1),(20,'LAPTOP-006','Acer Nitro V15 Gaming',18900.00,11,1),(21,'LAPTOP-007','MSI Thin 15 Intel i7',22500.00,6,1),(22,'LAPTOP-008','Huawei MateBook D16',15800.00,9,1),(23,'LAPTOP-009','Lenovo ThinkPad E14',19200.00,12,1),(24,'LAPTOP-010','Dell Vostro 3400',12000.00,0,0),(25,'LAPTOP-011','HP Victus 16 Rtx 4050',21500.00,7,1),(26,'LAPTOP-012','ASUS Zenbook 14 OLED',25000.00,5,1),(27,'LAPTOP-013','Apple MacBook Pro M3 Pro',45000.00,2,1);
 /*!40000 ALTER TABLE `productos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -204,6 +204,82 @@ LOCK TABLES `usuarios` WRITE;
 INSERT INTO `usuarios` VALUES (1,'Carlos Martinez','calomar.1992@gmail.com','Carlos123',1);
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Dumping routines for database 'PruebaTecnicaDB'
+--
+/*!50003 DROP PROCEDURE IF EXISTS `sp_InventarioBajo` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_InventarioBajo`()
+BEGIN
+    SELECT Codigo, Nombre, Stock
+    FROM Productos
+    WHERE Stock < 5 AND Estado = TRUE;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_MejoresClientes` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_MejoresClientes`()
+BEGIN
+    SELECT c.Nombre, c.IdentidadRTN, SUM(f.Total) AS TotalFacturado
+    FROM Facturas f
+    INNER JOIN Clientes c ON f.IdClientes = c.IdClientes
+    GROUP BY f.IdClientes, c.Nombre, c.IdentidadRTN
+    ORDER BY TotalFacturado DESC;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `sp_TopProductosVendidos` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_TopProductosVendidos`()
+BEGIN
+    SELECT 
+        p.Codigo, 
+        p.Nombre, 
+        SUM(fd.Cantidad) AS TotalVendido, 
+        SUM(fd.Subtotal) AS TotalGenerado
+    FROM FacturaDetalles fd
+    INNER JOIN Productos p ON fd.IdProductos = p.IdProductos
+    GROUP BY p.IdProductos, p.Codigo, p.Nombre
+    ORDER BY TotalVendido DESC
+    LIMIT 5;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -214,4 +290,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-29 17:19:09
+-- Dump completed on 2026-05-29 20:10:30

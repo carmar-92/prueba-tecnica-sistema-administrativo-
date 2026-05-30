@@ -12,7 +12,14 @@
 </div>
 
 <div class="card shadow-sm">
-    <div class="card-body">
+    <div class="card-header bg-white py-3">
+        <div class="input-group" style="max-width: 400px;">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" placeholder="Buscar por nombre, código o precio..." @bind="terminoBusqueda" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="card-body p-0">
         @if (listaProductos == null)
         {
             <div class="text-center my-5">
@@ -22,66 +29,86 @@
         }
         else if (!listaProductos.Any())
         {
-            <div class="alert alert-info">No hay productos registrados en el sistema.</div>
+            <div class="alert alert-info m-3">No hay productos registrados en el sistema.</div>
         }
         else
         {
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var producto in listaProductos)
-                    {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <td><span class="badge bg-secondary">@producto.Codigo</span></td>
-                            <td>@producto.Nombre</td>
-                            <td>@producto.Precio.ToString("N2")</td>
-                            <td>
-                                @if (producto.Stock <= 5)
-                                {
-                                    <span class="text-danger fw-bold">@producto.Stock</span>
-                                }
-                                else
-                                {
-                                    @producto.Stock
-                                }
-                            </td>
-                            <td>
-                                @if (producto.Estado)
-                                {
-                                    <span class="badge bg-success">Activo</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">Inactivo</span>
-                                }
-                            </td>
-                            <td>
-                                <a href="/productos/editar/@producto.IdProductos" class="btn btn-sm btn-outline-primary me-2">
-                                    <i class="bi bi-pencil-square"></i> Editar
-                                </a>
-                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarDesactivar(producto.IdProductos, producto.Nombre)">
-                                    <i class="bi bi-trash"></i> Eliminar
-                                </button>
-                            </td>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @if (!productosFiltrados.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No se encontraron productos con esa búsqueda.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var producto in productosFiltrados)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-secondary">@producto.Codigo</span></td>
+                                    <td class="fw-bold">@producto.Nombre</td>
+                                    <td>@producto.Precio.ToString("N2")</td>
+                                    <td>
+                                        @if (producto.Stock <= 5)
+                                        {
+                                            <span class="text-danger fw-bold">@producto.Stock</span>
+                                        }
+                                        else
+                                        {
+                                            @producto.Stock
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (producto.Estado)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="/productos/editar/@producto.IdProductos" class="btn btn-sm btn-outline-primary me-1">
+                                            <i class="bi bi-pencil-square"></i> Editar
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarDesactivar(producto.IdProductos, producto.Nombre)">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
     </div>
 </div>
 
 @code {
     private List<ProductoDto>? listaProductos;
+    private string terminoBusqueda = string.Empty;
+    
+    private IEnumerable<ProductoDto> productosFiltrados =>
+        string.IsNullOrWhiteSpace(terminoBusqueda)
+            ? listaProductos ?? new List<ProductoDto>()
+            : listaProductos!.Where(p =>
+                (p.Nombre != null && p.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) ||
+                (p.Codigo != null && p.Codigo.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase)) ||
+                p.Precio.ToString().Contains(terminoBusqueda));
 
     protected override async Task OnInitializedAsync()
     {
